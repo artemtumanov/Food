@@ -44,6 +44,12 @@
         line-height: 36px;
         color: rgba(0, 0, 0, 0.7);
     }
+    &__show {
+        display: block;
+    }
+    &__hide {
+        display: none;
+    }
 }
 .tabheader {
     width: 280px;
@@ -71,5 +77,19 @@
             font-size: 22px;
             font-weight: 700;
         }
+    }
+}
+
+.fade {
+    animation-name: fade;
+    animation-duration: 1.5s;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0.1;
+    }
+    to {
+        opacity: 1;
     }
 }
