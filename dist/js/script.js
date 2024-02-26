@@ -102,12 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBtn = document.querySelector('[data-close]'),
     modal = document.querySelector('.modal');
 
+  // Напишем функцию открытия модалки
+  function openModal() {
+    modal.style.display = 'block'; // Показываем модалку
+    document.body.style.overflow = 'hidden'; // Отменяем прокрутку страницы при открытой модалке
+  }
   // Навесим на все наши кнопки открытие модалки
   modalBtn.forEach(item => {
-    item.addEventListener('click', () => {
-      modal.style.display = 'block'; // Показываем модалку
-      document.body.style.overflow = 'hidden'; // Отменяем прокрутку страницы при открытой модалке
-    });
+    item.addEventListener('click', openModal);
   });
 
   // Напишем функцию закрытия модалки
@@ -132,6 +134,18 @@ document.addEventListener('DOMContentLoaded', () => {
       closeModal();
     }
   });
+
+  // Реализуем функционал появления модалки через какое-то время (например, 5 сек)
+  const openModalByTimer = setTimeout(openModal, 5000);
+
+  // Реализуем функционал открытия модалки после прокуртки страницы до конца
+  function showModalByScroll() {
+    if (window.scrollY + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+      openModal();
+      window.removeEventListener('scroll', showModalByScroll);
+    }
+  }
+  window.addEventListener('scroll', showModalByScroll);
 });
 /******/ })()
 ;
