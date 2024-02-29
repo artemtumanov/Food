@@ -152,28 +152,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // Используем классы
 
   class MenuCard {
+    // Создаем конструктор класса с различными переменными + rest оператор в конце
     constructor(src, alt, title, descr, price, parentSelector, ...classes) {
-      this.src = src;
-      this.alt = alt;
-      this.title = title;
-      this.descr = descr;
-      this.price = price;
-      this.classes = classes;
-      this.transfer = 9;
-      this.parent = document.querySelector(parentSelector);
-      this.changeToUAH();
+      this.src = src; // Путь к картинке
+      this.alt = alt; // Альтернативное название
+      this.title = title; // Title
+      this.descr = descr; // Описание
+      this.price = price; // Цена
+      this.classes = classes; // Массив классов для карточек
+      this.transfer = 27; // Курс гривны к доллару
+      this.parent = document.querySelector(parentSelector); // Получаем родителя наших карточек
+      this.changeToUAH(); // Вызываем метод конвертации валюты
     }
+
+    // Метод для конвертации валюты
     changeToUAH() {
       this.price = this.price * this.transfer;
     }
+
+    // Метод рендора наших карточек
     render() {
-      const element = document.createElement('div');
+      const element = document.createElement('div'); // Создали элемент div
+
+      // Если мы не передаем никакие классы в classes, то по умолчанию подставится класс menu__active
       if (this.classes.length === 0) {
         this.element = 'menu__item';
         element.classList.add(this.element);
       } else {
+        // Иначе пробегаемся по нашему массиву и присваиваем классы нашему element
         this.classes.forEach(classItem => element.classList.add(classItem));
       }
+
+      // Формируем верстку карточки
       element.innerHTML = `
 				<img src=${this.src} alt=${this.alt}>
 				<h3 class="menu__item-subtitle">${this.title}</h3>
@@ -184,12 +194,74 @@ document.addEventListener('DOMContentLoaded', () => {
 					<div class="menu__item-total"><span>${this.price}</span> грн/день</div>
 				</div>
 			`;
+      // Добавляем карточки на страницу
       this.parent.append(element);
     }
   }
-  new MenuCard("img/tabs/vegy.jpg", "vegy", 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 26, '.menu__field .container').render();
-  new MenuCard("img/tabs/elite.jpg", "elite", 'Меню “Премиум”', 'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!', 46, '.menu__field .container', 'menu__item').render();
-  new MenuCard("img/tabs/post.jpg", "post", 'Меню "Постное"', 'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.', 30, '.menu__field .container', 'menu__item').render();
+
+  // Создаем экземпляры нашего класса с различными значениями
+  new MenuCard("img/tabs/vegy.jpg", "vegy", 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 9, '.menu__field .container').render();
+  new MenuCard("img/tabs/elite.jpg", "elite", 'Меню “Премиум”', 'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!', 15, '.menu__field .container', 'menu__item').render();
+  new MenuCard("img/tabs/post.jpg", "post", 'Меню "Постное"', 'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.', 11, '.menu__field .container', 'menu__item').render();
+
+  // Форма
+  const forms = document.querySelectorAll('form'); // Получаем все формы с сайта
+
+  const message = {
+    // Создаем объект с сообщениями после нажатия на submit
+    loading: 'загрузка',
+    success: 'спасибо, скоро мы с вами свяжемся',
+    failure: 'Что-то пошло не так'
+  };
+
+  // Навесим нашу функцию на каждую форму
+  forms.forEach(item => {
+    postData(item);
+  });
+
+  //Напишем функцию для отправки данных на сервер, которая будет принимать форму(чтобы проще было внутри функции работаь с конкретной формой)
+  function postData(form) {
+    form.addEventListener('submit', e => {
+      e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
+
+      const statusMessage = document.createElement('div');
+      statusMessage.classList.add('status');
+      statusMessage.textContent = message.loading;
+      form.append(statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
+
+      const request = new XMLHttpRequest(); //Создаем реквест
+      request.open('POST', 'server.php'); //Настраиваем его
+
+      const formData = new FormData(form); // В случае если нам не нужно передавать данные в формате json, можно воспользоваться объектом FormData. Это первый способ передачи данных на сервер. Он собирает все значения из формы и формирует их по типу ключ-значение. В инпутах обязательно должны быть с атрибутом name. Так же важное замечание: Если используется FormData, то устанавливать request.setRequestHeader не нужно, он подставляется автоматически. В противном случае мы получим на сервере пустой массив.
+
+      request.send(formData); // Отправляем наши данные из FormData
+
+      //Второй способ, если нам нужно отправить данные в формате JSON:
+      //Для этого необходимо создать пустой объект и с помощью forEach записать в него значения из FormData. После чего превратить в формат json. В этом случае нам уже необходимо будет устанавливать request.setRequestHeader
+      // request.setRequestHeader('Content-type', 'application/json');
+      // const formData = new FormData(form);
+      // const object = {};
+      // formData.forEach(function(value, key) {
+      // 	object[key] = value;
+      // });
+      // const json = JSON.stringify(object);
+      // request.send(json);
+      //Так же в этом случае необходимо добавить строку в server.php
+
+      request.addEventListener('load', () => {
+        if (request.status === 200) {
+          console.log(request.response);
+          statusMessage.textContent = message.success; // Если все ок, выводим в консоль наши данные и меняем текст сообзения
+          form.reset(); // Сбрасываем значения формы
+          setTimeout(() => {
+            statusMessage.remove();
+          }, 2000); // Убираем сообщение через 2 секунды
+        } else {
+          statusMessage.textContent = message.failure; // Если какая-то ошибка - выводим сообщение
+        }
+      });
+    });
+  }
 });
 /******/ })()
 ;
