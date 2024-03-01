@@ -12,3 +12,11 @@
 @import './blocks/promotion/promotion';
 @import './blocks/footer/footer';
 @import './blocks/modal/modal';
+
+.show {
+    display: block;
+}
+
+.hide {
+    display: none;
+}

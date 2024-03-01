@@ -102,12 +102,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	//Получаем наши кнопки по дата атрибутам и наше модальное окно.
 	const modalBtn = document.querySelectorAll('[data-modal]'),
-		  closeBtn = document.querySelector('[data-close]'),
 		  modal = document.querySelector('.modal');
 
 	// Напишем функцию открытия модалки
 	function openModal() {
-		modal.style.display = 'block'; // Показываем модалку
+		modal.classList.add('show');// Показываем модалку
+		modal.classList.remove('hide');
 		document.body.style.overflow = 'hidden'; // Отменяем прокрутку страницы при открытой модалке
 	}
 	// Навесим на все наши кнопки открытие модалки
@@ -117,16 +117,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// Напишем функцию закрытия модалки
 	function closeModal () {
-		modal.style.display = 'none'; // Закрываем модалку
+		modal.classList.add('hide');
+		modal.classList.remove('show');// Закрываем модалку
 		document.body.style.overflow = 'visible'; // Возвращаем прокрутку
 	}
 
-	// Навесим на кнопку крестика закрытие модалки
-	closeBtn.addEventListener('click', closeModal);
-
 	// Сделаем закрытие модалки при клике на оверлей 
 	modal.addEventListener('click', (e) => {
-		if (e.target === modal) {
+		if (e.target === modal || e.target.getAttribute('data-close') == '') {
 			closeModal();
 		}
 	})
@@ -150,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// window.addEventListener('scroll', showModalByScroll);
+	window.addEventListener('scroll', showModalByScroll);
 
 
 	// Используем классы
@@ -237,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const forms = document.querySelectorAll('form'); // Получаем все формы с сайта
 
 	const message = { // Создаем объект с сообщениями после нажатия на submit
-		loading: 'загрузка',
+		loading: 'img/form/spinner.svg',
 		success: 'спасибо, скоро мы с вами свяжемся',
 		failure: 'Что-то пошло не так'
 	}
@@ -252,10 +250,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		form.addEventListener('submit', (e) => {
 			e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
 
-			const statusMessage = document.createElement('div');
-			statusMessage.classList.add('status');
-			statusMessage.textContent = message.loading;
-			form.append(statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
+			const statusMessage = document.createElement('img');
+			statusMessage.src = message.loading;
+			statusMessage.style.cssText = `
+				display: block;
+				margin: 0 auto;
+			`;
+			form.insertAdjacentElement('afterend', statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
 
 			const request = new XMLHttpRequest();//Создаем реквест
 			request.open('POST', 'server.php'); //Настраиваем его
@@ -280,16 +281,38 @@ document.addEventListener('DOMContentLoaded', () => {
 			request.addEventListener('load', () => {
 				if(request.status === 200) {
 					console.log(request.response);
-					statusMessage.textContent = message.success; // Если все ок, выводим в консоль наши данные и меняем текст сообзения
+					showThanksMOdal(message.success); // Если все ок, выводим в консоль наши данные и меняем текст сообзения
 					form.reset(); // Сбрасываем значения формы
-					setTimeout(() => {
-						statusMessage.remove()
-					}, 2000); // Убираем сообщение через 2 секунды
+					statusMessage.remove()
 				} else {
-					statusMessage.textContent = message.failure; // Если какая-то ошибка - выводим сообщение
+					showThanksMOdal(message.failure); // Если какая-то ошибка - выводим сообщение
 				}
-			})
+			});
+		});
+	};
 
-		})
+	// Напишем функцию красивого оповещения пользователя с окном благодарности путем скрытия элемента modal__dialog и встривания на его место окна с благодарностью
+	function showThanksMOdal(message) {
+		const prevModalDialog = document.querySelector('.modal__dialog'); //Получаем modal__dialog
+		prevModalDialog.classList.add('hide'); // Скрываем его
+		openModal(); // Вызываем функцию паказа модального окна
+
+		const thanksModal = document.createElement('div'); //Создаем элемент окна благодарности
+		thanksModal.classList.add('modal__dialog'); // Добавим ему класс modal__dialog
+		thanksModal.innerHTML = `
+			<div class="modal__content">
+				<div class="modal__close" data-close>×</div>
+				<div class="modal__title">${message}</div>
+			</div>
+		`; //Формируем создание верстки для окна благодарности. Тут необходимо помнить, что наш крестик создается динамически, соответственно он не будет получен с помощью аттрибута. Для этого был доработан обработчик события при закрытии модалки добавлением строки e.target.getAttribute('data-close') == '' в условие 
+
+		document.querySelector('.modal').append(thanksModal); // Добавляем элемент на страницу
+		setTimeout(() => {
+			thanksModal.remove();
+			prevModalDialog.classList.add('show');
+			prevModalDialog.classList.remove('hide');
+			closeModal();
+		}, 4000) // Через 4 секунды удаляем окно благодарности, возвращаем модалку и закрываем её
 	}
+
 });
