@@ -221,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', e => {
       e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
 
-      const statusMessage = document.createElement('img');
+      let statusMessage = document.createElement('img');
       statusMessage.src = message.loading;
       statusMessage.style.cssText = `
 				display: block;
@@ -229,12 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			`;
       form.insertAdjacentElement('afterend', statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
 
-      const request = new XMLHttpRequest(); //Создаем реквест
-      request.open('POST', 'server.php'); //Настраиваем его
+      // МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ XMLHTTPREQUEST
 
-      const formData = new FormData(form); // В случае если нам не нужно передавать данные в формате json, можно воспользоваться объектом FormData. Это первый способ передачи данных на сервер. Он собирает все значения из формы и формирует их по типу ключ-значение. В инпутах обязательно должны быть с атрибутом name. Так же важное замечание: Если используется FormData, то устанавливать request.setRequestHeader не нужно, он подставляется автоматически. В противном случае мы получим на сервере пустой массив.
+      // const request = new XMLHttpRequest(); //Создаем реквест
+      // request.open('POST', 'server.php'); //Настраиваем его
 
-      request.send(formData); // Отправляем наши данные из FormData
+      // const formData = new FormData(form); // В случае если нам не нужно передавать данные в формате json, можно воспользоваться объектом FormData. Это первый способ передачи данных на сервер. Он собирает все значения из формы и формирует их по типу ключ-значение. В инпутах обязательно должны быть с атрибутом name. Так же важное замечание: Если используется FormData, то устанавливать request.setRequestHeader не нужно, он подставляется автоматически. В противном случае мы получим на сервере пустой массив.
+
+      // request.send(formData); // Отправляем наши данные из FormData
 
       //Второй способ, если нам нужно отправить данные в формате JSON:
       //Для этого необходимо создать пустой объект и с помощью forEach записать в него значения из FormData. После чего превратить в формат json. В этом случае нам уже необходимо будет устанавливать request.setRequestHeader
@@ -248,15 +250,38 @@ document.addEventListener('DOMContentLoaded', () => {
       // request.send(json);
       //Так же в этом случае необходимо добавить строку в server.php
 
-      request.addEventListener('load', () => {
-        if (request.status === 200) {
-          console.log(request.response);
-          showThanksMOdal(message.success); // Если все ок, выводим в консоль наши данные и меняем текст сообзения
-          form.reset(); // Сбрасываем значения формы
-          statusMessage.remove();
-        } else {
-          showThanksMOdal(message.failure); // Если какая-то ошибка - выводим сообщение
+      // request.addEventListener('load', () => {
+      // 	if(request.status === 200) {
+      // 		console.log(request.response);
+      // 		showThanksMOdal(message.success); // Если все ок, выводим в консоль наши данные и меняем текст сообзения
+      // 		form.reset(); // Сбрасываем значения формы
+      // 		statusMessage.remove()
+      // 	} else {
+      // 		showThanksMOdal(message.failure); // Если какая-то ошибка - выводим сообщение
+      // 	}
+      // });
+
+      // МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ FETCH
+
+      const formData = new FormData(form);
+      const object = {};
+      formData.forEach(function (value, key) {
+        object[key] = value;
+      });
+      fetch('server.php', {
+        method: 'POST',
+        body: JSON.stringify(object),
+        headers: {
+          'Content-type': 'application/json'
         }
+      }).then(data => data.text()).then(data => {
+        console.log(data);
+        showThanksMOdal(message.success);
+        statusMessage.remove();
+      }).catch(() => {
+        showThanksMOdal(message.failure);
+      }).finally(() => {
+        form.reset();
       });
     });
   }
