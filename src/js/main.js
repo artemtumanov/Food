@@ -200,36 +200,24 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	//Напишем функцию получения данных с сервера
+	const getResource = async (url) => {
+		const res = await fetch(url);
+
+		if (!res.ok) { //Обработаем ошибку
+			throw new Error(`Couldnt not fetch ${url}, status: ${res.status}`);
+		}
+
+		return await res.json();
+	}
+
 	// Создаем экземпляры нашего класса с различными значениями
-	new MenuCard(
-		"img/tabs/vegy.jpg",
-		"vegy",
-		'Меню "Фитнес"',
-		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-		9,
-		'.menu__field .container',
-	).render();
-
-	new MenuCard(
-		"img/tabs/elite.jpg",
-		"elite",
-		'Меню “Премиум”',
-		'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-		15,
-		'.menu__field .container',
-		'menu__item',
-	).render();
-
-	new MenuCard(
-		"img/tabs/post.jpg",
-		"post",
-		'Меню "Постное"',
-		'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-		11,
-		'.menu__field .container',
-		'menu__item'
-	).render();
-
+	getResource('http://localhost:3000/menu')
+	.then(data => {
+		data.forEach(({img, altimg, title, descr, price}) => {
+			new MenuCard(img, altimg, title, descr, price, '.menu__field .container').render();
+		})
+	})
 
 	// Форма
 	const forms = document.querySelectorAll('form'); // Получаем все формы с сайта
@@ -242,11 +230,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// Навесим нашу функцию на каждую форму
 	forms.forEach(item => {
-		postData(item);
+		bindPostData(item);
 	})
 
+	//Напишем функцию отправки данных на сервер, используя async\await чтобы показать, что код "синхронный"
+	const postData = async (url, data) => {
+		const res = await fetch(url, {
+			method: 'POST',
+			body: data,
+			headers: {
+				'Content-type': 'application/json'
+			}
+		})
+		return await res.json();
+	}
+
 	//Напишем функцию для отправки данных на сервер, которая будет принимать форму(чтобы проще было внутри функции работаь с конкретной формой)
-	function postData(form) {
+	function bindPostData(form) {
 		form.addEventListener('submit', (e) => {
 			e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
 
@@ -294,19 +294,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			// МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ FETCH
 
 			const formData = new FormData(form);
-			const object = {};
-			formData.forEach(function(value, key) {
-				object[key] = value;
-			});
+			const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-			fetch('server.php', {
-				method: 'POST',
-				body: JSON.stringify(object),
-				headers: {
-					'Content-type': 'application/json'
-				}
-			})
-			.then(data => data.text())
+			postData('http://localhost:3000/requests', json)
 			.then(data => {
 				console.log(data);
 				showThanksMOdal(message.success);

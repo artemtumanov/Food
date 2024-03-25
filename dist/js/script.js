@@ -196,10 +196,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  //Напишем функцию получения данных с сервера
+	const getResource = async (url) => {
+		const res = await fetch(url);
+
+		if (!res.ok) { //Обработаем ошибку
+			throw new Error(`Couldnt not fetch ${url}, status: ${res.status}`);
+		}
+
+		return await res.json();
+	}
+
   // Создаем экземпляры нашего класса с различными значениями
-  new MenuCard("img/tabs/vegy.jpg", "vegy", 'Меню "Фитнес"', 'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!', 9, '.menu__field .container').render();
-  new MenuCard("img/tabs/elite.jpg", "elite", 'Меню “Премиум”', 'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!', 15, '.menu__field .container', 'menu__item').render();
-  new MenuCard("img/tabs/post.jpg", "post", 'Меню "Постное"', 'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.', 11, '.menu__field .container', 'menu__item').render();
+  getResource('http://localhost:3000/menu')
+	.then(data => {
+		data.forEach(({img, altimg, title, descr, price}) => {
+			new MenuCard(img, altimg, title, descr, price, '.menu__field .container').render();
+		})
+	})
 
   // Форма
   const forms = document.querySelectorAll('form'); // Получаем все формы с сайта
@@ -213,79 +227,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Навесим нашу функцию на каждую форму
   forms.forEach(item => {
-    postData(item);
-  });
+		bindPostData(item);
+	})
+  //Напишем функцию отправки данных на сервер, используя async\await чтобы показать, что код "синхронный"
+	const postData = async (url, data) => {
+		const res = await fetch(url, {
+			method: 'POST',
+			body: data,
+			headers: {
+				'Content-type': 'application/json'
+			}
+		})
+		return await res.json();
+	}
 
-  //Напишем функцию для отправки данных на сервер, которая будет принимать форму(чтобы проще было внутри функции работаь с конкретной формой)
-  function postData(form) {
-    form.addEventListener('submit', e => {
-      e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
+	//Напишем функцию для отправки данных на сервер, которая будет принимать форму(чтобы проще было внутри функции работаь с конкретной формой)
+	function bindPostData(form) {
+		form.addEventListener('submit', (e) => {
+			e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
 
-      let statusMessage = document.createElement('img');
-      statusMessage.src = message.loading;
-      statusMessage.style.cssText = `
+			let statusMessage = document.createElement('img');
+			statusMessage.src = message.loading;
+			statusMessage.style.cssText = `
 				display: block;
 				margin: 0 auto;
 			`;
-      form.insertAdjacentElement('afterend', statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
+			form.insertAdjacentElement('afterend', statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
 
-      // МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ XMLHTTPREQUEST
+			// МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ XMLHTTPREQUEST
 
-      // const request = new XMLHttpRequest(); //Создаем реквест
-      // request.open('POST', 'server.php'); //Настраиваем его
+			// const request = new XMLHttpRequest(); //Создаем реквест
+			// request.open('POST', 'server.php'); //Настраиваем его
 
-      // const formData = new FormData(form); // В случае если нам не нужно передавать данные в формате json, можно воспользоваться объектом FormData. Это первый способ передачи данных на сервер. Он собирает все значения из формы и формирует их по типу ключ-значение. В инпутах обязательно должны быть с атрибутом name. Так же важное замечание: Если используется FormData, то устанавливать request.setRequestHeader не нужно, он подставляется автоматически. В противном случае мы получим на сервере пустой массив.
+			// const formData = new FormData(form); // В случае если нам не нужно передавать данные в формате json, можно воспользоваться объектом FormData. Это первый способ передачи данных на сервер. Он собирает все значения из формы и формирует их по типу ключ-значение. В инпутах обязательно должны быть с атрибутом name. Так же важное замечание: Если используется FormData, то устанавливать request.setRequestHeader не нужно, он подставляется автоматически. В противном случае мы получим на сервере пустой массив.
 
-      // request.send(formData); // Отправляем наши данные из FormData
+			// request.send(formData); // Отправляем наши данные из FormData
 
-      //Второй способ, если нам нужно отправить данные в формате JSON:
-      //Для этого необходимо создать пустой объект и с помощью forEach записать в него значения из FormData. После чего превратить в формат json. В этом случае нам уже необходимо будет устанавливать request.setRequestHeader
-      // request.setRequestHeader('Content-type', 'application/json');
-      // const formData = new FormData(form);
-      // const object = {};
-      // formData.forEach(function(value, key) {
-      // 	object[key] = value;
-      // });
-      // const json = JSON.stringify(object);
-      // request.send(json);
-      //Так же в этом случае необходимо добавить строку в server.php
+			//Второй способ, если нам нужно отправить данные в формате JSON:
+			//Для этого необходимо создать пустой объект и с помощью forEach записать в него значения из FormData. После чего превратить в формат json. В этом случае нам уже необходимо будет устанавливать request.setRequestHeader
+			// request.setRequestHeader('Content-type', 'application/json');
+			// const formData = new FormData(form);
+			// const object = {};
+			// formData.forEach(function(value, key) {
+			// 	object[key] = value;
+			// });
+			// const json = JSON.stringify(object);
+			// request.send(json);
+			//Так же в этом случае необходимо добавить строку в server.php
 
-      // request.addEventListener('load', () => {
-      // 	if(request.status === 200) {
-      // 		console.log(request.response);
-      // 		showThanksMOdal(message.success); // Если все ок, выводим в консоль наши данные и меняем текст сообзения
-      // 		form.reset(); // Сбрасываем значения формы
-      // 		statusMessage.remove()
-      // 	} else {
-      // 		showThanksMOdal(message.failure); // Если какая-то ошибка - выводим сообщение
-      // 	}
-      // });
+			// request.addEventListener('load', () => {
+			// 	if(request.status === 200) {
+			// 		console.log(request.response);
+			// 		showThanksMOdal(message.success); // Если все ок, выводим в консоль наши данные и меняем текст сообзения
+			// 		form.reset(); // Сбрасываем значения формы
+			// 		statusMessage.remove()
+			// 	} else {
+			// 		showThanksMOdal(message.failure); // Если какая-то ошибка - выводим сообщение
+			// 	}
+			// });
 
-      // МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ FETCH
 
-      const formData = new FormData(form);
-      const object = {};
-      formData.forEach(function (value, key) {
-        object[key] = value;
-      });
-      fetch('server.php', {
-        method: 'POST',
-        body: JSON.stringify(object),
-        headers: {
-          'Content-type': 'application/json'
-        }
-      }).then(data => data.text()).then(data => {
-        console.log(data);
-        showThanksMOdal(message.success);
-        statusMessage.remove();
-      }).catch(() => {
-        showThanksMOdal(message.failure);
-      }).finally(() => {
-        form.reset();
-      });
-    });
-  }
-  ;
+			// МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ FETCH
+
+			const formData = new FormData(form);
+			const json = JSON.stringify(Object.fromEntries(formData.entries()));
+
+			postData('http://localhost:3000/requests', json)
+			.then(data => {
+				console.log(data);
+				showThanksMOdal(message.success);
+				statusMessage.remove()
+			})
+			.catch(() => {
+				showThanksMOdal(message.failure);
+			})
+			.finally(() => {
+				form.reset();
+			})
+		});
+	};
 
   // Напишем функцию красивого оповещения пользователя с окном благодарности путем скрытия элемента modal__dialog и встривания на его место окна с благодарностью
   function showThanksMOdal(message) {
