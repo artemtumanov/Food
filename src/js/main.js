@@ -335,4 +335,201 @@ document.addEventListener('DOMContentLoaded', () => {
 		}, 4000) // Через 4 секунды удаляем окно благодарности, возвращаем модалку и закрываем её
 	}
 
+
+	//СЛАЙДЕР
+	//Вариант слайдера №1 (полегче)
+	// const slides = document.querySelectorAll('.offer__slide'), //Получаем все слайды
+	// 		prev = document.querySelector('.offer__slider-prev'), //Получаем кнопку prev
+	// 		next = document.querySelector('.offer__slider-next'), //Получаем кнопку next
+	// 		total = document.querySelector('#total'), //Получаем общее количество слайдов
+	// 		current = document.querySelector('#current'); //Получаем текущее значение слайда
+	// let slideIndex = 1; //Переменная, которая будет привязана к текущему слайду
+
+	// showSlide(slideIndex); //Инициализация слайдера с первого слайда при первоначальной загрузке страницы
+
+	// if (slides.length < 10) { //Условие, при котором добавляем 0, если количество слайдов меньше 10
+	// 	total.textContent = `0${slides.length}`;
+	// } else {
+	// 	total.textContent = slides.length;
+	// }
+
+	// function showSlide (n) { //Пишем функцию, которая будет показывать слайды
+	// 	if (n > slides.length) {
+	// 	slideIndex = 1;
+	// 	}
+
+	// 	if (n < 1) {
+	// 	slideIndex = slides.length;
+	// 	} //Это, так называемое, auto loop. Если доходим до границы, перелистываем на начальный или конечный слайд
+
+	// 	slides.forEach(item => item.style.display = 'none'); //Скрываем все слайды
+
+	// 	slides[slideIndex - 1].style.display = 'block'; //Показываем слайд в зависимости от значения slideIndex
+
+	// 	if (slides.length < 10) {
+	// 	current.textContent = `0${slideIndex}`;
+	// 	} else {
+	// 	current.textContent = slideIndex;
+	// 	} //Если текущий слайд меньше 10 - добавляем 0
+	// }
+
+	// function plusSlide(n) { //Пишем функцию, которая будет изменять значение slideIndex в зависимости от нажатой кнопки и вызывать функцию показа слайда
+	// 	showSlide(slideIndex += n);
+	// }
+
+	// prev.addEventListener('click', () => {
+	// 	plusSlide(-1);
+	// }); //При нажатии на prev уменьшаем slideIndex на 1
+
+	// next.addEventListener('click', () => {
+	// 	plusSlide(1);
+	// }); //При нажатии на next увеличиваем slideIndex на 1
+
+
+
+	  //Вариант №2 (посложнее, но с анимацией)
+	  let offset = 0; //На какое расстояние смещаем слайд
+	  let slideIndex = 1;
+  
+	  const slides = document.querySelectorAll(".offer__slide"),
+	  slider = document.querySelector('.offer__slider'),
+		  prev = document.querySelector(".offer__slider-prev"),
+		  next = document.querySelector(".offer__slider-next"),
+		  total = document.querySelector("#total"),
+		  current = document.querySelector("#current"),
+		  slidesWrapper = document.querySelector(".offer__slider-wrapper"), //Обертка
+		  width = window.getComputedStyle(slidesWrapper).width, //Ширина обертки
+		  slidesField = document.querySelector(".offer__slider-inner"); //Обертка слайдов
+  
+	  if (slides.length < 10) {
+		  total.textContent = `0${slides.length}`;
+		  current.textContent = `0${slideIndex}`;
+	  } else {
+		  total.textContent = slides.length;
+		  current.textContent = slideIndex;
+	  }
+  
+	  slidesField.style.width = `${100 * slides.length}%`;
+	  slidesField.style.display = "flex";
+	  slidesField.style.transition = "0.5s all";
+  
+	  slidesWrapper.style.overflow = "hidden";
+  
+	  slides.forEach((slide) => {
+		  slide.style.width = width;
+	  });
+  
+	slider.style.position = 'relative';
+  
+	const indicators = document.createElement('ol'),
+		  dots = [];
+	indicators.classList.add('carousel-indicators');
+	indicators.style.cssText = `
+	  position: absolute;
+	  right: 0;
+	  bottom: 0;
+	  left: 0;
+	  z-index: 15;
+	  display: flex;
+	  justify-content: center;
+	  margin-right: 15%;
+	  margin-left: 15%;
+	  list-style: none;
+	`;
+	slider.append(indicators);
+  
+	for (let i = 0; i < slides.length; i++) {
+	  const dot = document.createElement('li');
+	  dot.setAttribute('data-slide-to', i + 1);
+	  dot.style.cssText = `
+		box-sizing: content-box;
+		flex: 0 1 auto;
+		width: 30px;
+		height: 6px;
+		margin-right: 3px;
+		margin-left: 3px;
+		cursor: pointer;
+		background-color: #fff;
+		background-clip: padding-box;
+		border-top: 10px solid transparent;
+		border-bottom: 10px solid transparent;
+		opacity: .5;
+		transition: opacity .6s ease;
+	  `;
+	  if (i == 0) {
+		dot.style.opacity = 1;
+	  }
+	  indicators.append(dot);
+	  dots.push(dot);
+	}
+  
+	  next.addEventListener("click", () => {
+		  if (offset == +width.slice(0, width.length - 2) * (slides.length - 1)) {
+			  offset = 0;
+		  } else {
+			  offset += +width.slice(0, width.length - 2);
+		  }
+  
+		  slidesField.style.transform = `translateX(-${offset}px)`;
+  
+		  if (slideIndex == slides.length) {
+			  slideIndex = 1;
+		  } else {
+			  slideIndex++;
+		  }
+  
+		  if (slides.length < 10) {
+			  current.textContent = `0${slideIndex}`;
+		  } else {
+			  current.textContent = slideIndex;
+		  }
+  
+	  dots.forEach(dot => dot.style.opacity = '0.5');
+	  dots[slideIndex - 1].style.opacity = 1;
+	  });
+  
+	  prev.addEventListener("click", () => {
+		  if (offset == 0) {
+			  offset = +width.slice(0, width.length - 2) * (slides.length - 1);
+		  } else {
+			  offset -= +width.slice(0, width.length - 2);
+		  }
+  
+		  slidesField.style.transform = `translateX(-${offset}px)`;
+  
+		  if (slideIndex == 1) {
+			  slideIndex = slides.length;
+		  } else {
+			  slideIndex--;
+		  }
+  
+		  if (slides.length < 10) {
+			  current.textContent = `0${slideIndex}`;
+		  } else {
+			  current.textContent = slideIndex;
+		  }
+  
+	  dots.forEach(dot => dot.style.opacity = '0.5');
+	  dots[slideIndex - 1].style.opacity = 1;
+	  });
+  
+	dots.forEach(dot => {
+	  dot.addEventListener('click', (e) => {
+		const slideTo = e.target.getAttribute('data-slide-to');
+  
+		slideIndex = slideTo;
+		offset = +width.slice(0, width.length - 2) * (slideTo - 1);
+  
+		slidesField.style.transform = `translateX(-${offset}px)`;
+  
+		if (slides.length < 10) {
+		  current.textContent = `0${slideIndex}`;
+		} else {
+		  current.textContent = slideIndex;
+		}
+  
+		dots.forEach(dot => dot.style.opacity = '0.5');
+		dots[slideIndex - 1].style.opacity = 1;
+	  });
+	});
 });

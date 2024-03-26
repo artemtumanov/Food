@@ -197,23 +197,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   //Напишем функцию получения данных с сервера
-	const getResource = async (url) => {
-		const res = await fetch(url);
-
-		if (!res.ok) { //Обработаем ошибку
-			throw new Error(`Couldnt not fetch ${url}, status: ${res.status}`);
-		}
-
-		return await res.json();
-	}
+  const getResource = async url => {
+    const res = await fetch(url);
+    if (!res.ok) {
+      //Обработаем ошибку
+      throw new Error(`Couldnt not fetch ${url}, status: ${res.status}`);
+    }
+    return await res.json();
+  };
 
   // Создаем экземпляры нашего класса с различными значениями
-  getResource('http://localhost:3000/menu')
-	.then(data => {
-		data.forEach(({img, altimg, title, descr, price}) => {
-			new MenuCard(img, altimg, title, descr, price, '.menu__field .container').render();
-		})
-	})
+  getResource('http://localhost:3000/menu').then(data => {
+    data.forEach(({
+      img,
+      altimg,
+      title,
+      descr,
+      price
+    }) => {
+      new MenuCard(img, altimg, title, descr, price, '.menu__field .container').render();
+    });
+  });
 
   // Форма
   const forms = document.querySelectorAll('form'); // Получаем все формы с сайта
@@ -227,85 +231,82 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Навесим нашу функцию на каждую форму
   forms.forEach(item => {
-		bindPostData(item);
-	})
+    bindPostData(item);
+  });
+
   //Напишем функцию отправки данных на сервер, используя async\await чтобы показать, что код "синхронный"
-	const postData = async (url, data) => {
-		const res = await fetch(url, {
-			method: 'POST',
-			body: data,
-			headers: {
-				'Content-type': 'application/json'
-			}
-		})
-		return await res.json();
-	}
+  const postData = async (url, data) => {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: data,
+      headers: {
+        'Content-type': 'application/json'
+      }
+    });
+    return await res.json();
+  };
 
-	//Напишем функцию для отправки данных на сервер, которая будет принимать форму(чтобы проще было внутри функции работаь с конкретной формой)
-	function bindPostData(form) {
-		form.addEventListener('submit', (e) => {
-			e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
+  //Напишем функцию для отправки данных на сервер, которая будет принимать форму(чтобы проще было внутри функции работаь с конкретной формой)
+  function bindPostData(form) {
+    form.addEventListener('submit', e => {
+      e.preventDefault(); //Отменяем стандартное поведение браузера при нажатии на кнопку формы
 
-			let statusMessage = document.createElement('img');
-			statusMessage.src = message.loading;
-			statusMessage.style.cssText = `
+      let statusMessage = document.createElement('img');
+      statusMessage.src = message.loading;
+      statusMessage.style.cssText = `
 				display: block;
 				margin: 0 auto;
 			`;
-			form.insertAdjacentElement('afterend', statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
+      form.insertAdjacentElement('afterend', statusMessage); // Эти 4 строки создают нам блок на странице с сообщением для пользователя о процессе отпраки данных с формы
 
-			// МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ XMLHTTPREQUEST
+      // МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ XMLHTTPREQUEST
 
-			// const request = new XMLHttpRequest(); //Создаем реквест
-			// request.open('POST', 'server.php'); //Настраиваем его
+      // const request = new XMLHttpRequest(); //Создаем реквест
+      // request.open('POST', 'server.php'); //Настраиваем его
 
-			// const formData = new FormData(form); // В случае если нам не нужно передавать данные в формате json, можно воспользоваться объектом FormData. Это первый способ передачи данных на сервер. Он собирает все значения из формы и формирует их по типу ключ-значение. В инпутах обязательно должны быть с атрибутом name. Так же важное замечание: Если используется FormData, то устанавливать request.setRequestHeader не нужно, он подставляется автоматически. В противном случае мы получим на сервере пустой массив.
+      // const formData = new FormData(form); // В случае если нам не нужно передавать данные в формате json, можно воспользоваться объектом FormData. Это первый способ передачи данных на сервер. Он собирает все значения из формы и формирует их по типу ключ-значение. В инпутах обязательно должны быть с атрибутом name. Так же важное замечание: Если используется FormData, то устанавливать request.setRequestHeader не нужно, он подставляется автоматически. В противном случае мы получим на сервере пустой массив.
 
-			// request.send(formData); // Отправляем наши данные из FormData
+      // request.send(formData); // Отправляем наши данные из FormData
 
-			//Второй способ, если нам нужно отправить данные в формате JSON:
-			//Для этого необходимо создать пустой объект и с помощью forEach записать в него значения из FormData. После чего превратить в формат json. В этом случае нам уже необходимо будет устанавливать request.setRequestHeader
-			// request.setRequestHeader('Content-type', 'application/json');
-			// const formData = new FormData(form);
-			// const object = {};
-			// formData.forEach(function(value, key) {
-			// 	object[key] = value;
-			// });
-			// const json = JSON.stringify(object);
-			// request.send(json);
-			//Так же в этом случае необходимо добавить строку в server.php
+      //Второй способ, если нам нужно отправить данные в формате JSON:
+      //Для этого необходимо создать пустой объект и с помощью forEach записать в него значения из FormData. После чего превратить в формат json. В этом случае нам уже необходимо будет устанавливать request.setRequestHeader
+      // request.setRequestHeader('Content-type', 'application/json');
+      // const formData = new FormData(form);
+      // const object = {};
+      // formData.forEach(function(value, key) {
+      // 	object[key] = value;
+      // });
+      // const json = JSON.stringify(object);
+      // request.send(json);
+      //Так же в этом случае необходимо добавить строку в server.php
 
-			// request.addEventListener('load', () => {
-			// 	if(request.status === 200) {
-			// 		console.log(request.response);
-			// 		showThanksMOdal(message.success); // Если все ок, выводим в консоль наши данные и меняем текст сообзения
-			// 		form.reset(); // Сбрасываем значения формы
-			// 		statusMessage.remove()
-			// 	} else {
-			// 		showThanksMOdal(message.failure); // Если какая-то ошибка - выводим сообщение
-			// 	}
-			// });
+      // request.addEventListener('load', () => {
+      // 	if(request.status === 200) {
+      // 		console.log(request.response);
+      // 		showThanksMOdal(message.success); // Если все ок, выводим в консоль наши данные и меняем текст сообзения
+      // 		form.reset(); // Сбрасываем значения формы
+      // 		statusMessage.remove()
+      // 	} else {
+      // 		showThanksMOdal(message.failure); // Если какая-то ошибка - выводим сообщение
+      // 	}
+      // });
 
+      // МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ FETCH
 
-			// МЕТОД ОТПРАВКИ ФОРМЫ С ПОМОЩЬЮ FETCH
-
-			const formData = new FormData(form);
-			const json = JSON.stringify(Object.fromEntries(formData.entries()));
-
-			postData('http://localhost:3000/requests', json)
-			.then(data => {
-				console.log(data);
-				showThanksMOdal(message.success);
-				statusMessage.remove()
-			})
-			.catch(() => {
-				showThanksMOdal(message.failure);
-			})
-			.finally(() => {
-				form.reset();
-			})
-		});
-	};
+      const formData = new FormData(form);
+      const json = JSON.stringify(Object.fromEntries(formData.entries()));
+      postData('http://localhost:3000/requests', json).then(data => {
+        console.log(data);
+        showThanksMOdal(message.success);
+        statusMessage.remove();
+      }).catch(() => {
+        showThanksMOdal(message.failure);
+      }).finally(() => {
+        form.reset();
+      });
+    });
+  }
+  ;
 
   // Напишем функцию красивого оповещения пользователя с окном благодарности путем скрытия элемента modal__dialog и встривания на его место окна с благодарностью
   function showThanksMOdal(message) {
@@ -330,6 +331,181 @@ document.addEventListener('DOMContentLoaded', () => {
       closeModal();
     }, 4000); // Через 4 секунды удаляем окно благодарности, возвращаем модалку и закрываем её
   }
+
+  //СЛАЙДЕР
+  //Вариант слайдера №1 (полегче)
+  // const slides = document.querySelectorAll('.offer__slide'), //Получаем все слайды
+  // 		prev = document.querySelector('.offer__slider-prev'), //Получаем кнопку prev
+  // 		next = document.querySelector('.offer__slider-next'), //Получаем кнопку next
+  // 		total = document.querySelector('#total'), //Получаем общее количество слайдов
+  // 		current = document.querySelector('#current'); //Получаем текущее значение слайда
+  // let slideIndex = 1; //Переменная, которая будет привязана к текущему слайду
+
+  // showSlide(slideIndex); //Инициализация слайдера с первого слайда при первоначальной загрузке страницы
+
+  // if (slides.length < 10) { //Условие, при котором добавляем 0, если количество слайдов меньше 10
+  // 	total.textContent = `0${slides.length}`;
+  // } else {
+  // 	total.textContent = slides.length;
+  // }
+
+  // function showSlide (n) { //Пишем функцию, которая будет показывать слайды
+  // 	if (n > slides.length) {
+  // 	slideIndex = 1;
+  // 	}
+
+  // 	if (n < 1) {
+  // 	slideIndex = slides.length;
+  // 	} //Это, так называемое, auto loop. Если доходим до границы, перелистываем на начальный или конечный слайд
+
+  // 	slides.forEach(item => item.style.display = 'none'); //Скрываем все слайды
+
+  // 	slides[slideIndex - 1].style.display = 'block'; //Показываем слайд в зависимости от значения slideIndex
+
+  // 	if (slides.length < 10) {
+  // 	current.textContent = `0${slideIndex}`;
+  // 	} else {
+  // 	current.textContent = slideIndex;
+  // 	} //Если текущий слайд меньше 10 - добавляем 0
+  // }
+
+  // function plusSlide(n) { //Пишем функцию, которая будет изменять значение slideIndex в зависимости от нажатой кнопки и вызывать функцию показа слайда
+  // 	showSlide(slideIndex += n);
+  // }
+
+  // prev.addEventListener('click', () => {
+  // 	plusSlide(-1);
+  // }); //При нажатии на prev уменьшаем slideIndex на 1
+
+  // next.addEventListener('click', () => {
+  // 	plusSlide(1);
+  // }); //При нажатии на next увеличиваем slideIndex на 1
+
+  //Вариант №2 (посложнее, но с анимацией)
+  let offset = 0; //На какое расстояние смещаем слайд
+  let slideIndex = 1;
+  const slides = document.querySelectorAll(".offer__slide"),
+    slider = document.querySelector('.offer__slider'),
+    prev = document.querySelector(".offer__slider-prev"),
+    next = document.querySelector(".offer__slider-next"),
+    total = document.querySelector("#total"),
+    current = document.querySelector("#current"),
+    slidesWrapper = document.querySelector(".offer__slider-wrapper"),
+    //Обертка
+    width = window.getComputedStyle(slidesWrapper).width,
+    //Ширина обертки
+    slidesField = document.querySelector(".offer__slider-inner"); //Обертка слайдов
+
+  if (slides.length < 10) {
+    total.textContent = `0${slides.length}`;
+    current.textContent = `0${slideIndex}`;
+  } else {
+    total.textContent = slides.length;
+    current.textContent = slideIndex;
+  }
+  slidesField.style.width = `${100 * slides.length}%`;
+  slidesField.style.display = "flex";
+  slidesField.style.transition = "0.5s all";
+  slidesWrapper.style.overflow = "hidden";
+  slides.forEach(slide => {
+    slide.style.width = width;
+  });
+  slider.style.position = 'relative';
+  const indicators = document.createElement('ol'),
+    dots = [];
+  indicators.classList.add('carousel-indicators');
+  indicators.style.cssText = `
+	  position: absolute;
+	  right: 0;
+	  bottom: 0;
+	  left: 0;
+	  z-index: 15;
+	  display: flex;
+	  justify-content: center;
+	  margin-right: 15%;
+	  margin-left: 15%;
+	  list-style: none;
+	`;
+  slider.append(indicators);
+  for (let i = 0; i < slides.length; i++) {
+    const dot = document.createElement('li');
+    dot.setAttribute('data-slide-to', i + 1);
+    dot.style.cssText = `
+		box-sizing: content-box;
+		flex: 0 1 auto;
+		width: 30px;
+		height: 6px;
+		margin-right: 3px;
+		margin-left: 3px;
+		cursor: pointer;
+		background-color: #fff;
+		background-clip: padding-box;
+		border-top: 10px solid transparent;
+		border-bottom: 10px solid transparent;
+		opacity: .5;
+		transition: opacity .6s ease;
+	  `;
+    if (i == 0) {
+      dot.style.opacity = 1;
+    }
+    indicators.append(dot);
+    dots.push(dot);
+  }
+  next.addEventListener("click", () => {
+    if (offset == +width.slice(0, width.length - 2) * (slides.length - 1)) {
+      offset = 0;
+    } else {
+      offset += +width.slice(0, width.length - 2);
+    }
+    slidesField.style.transform = `translateX(-${offset}px)`;
+    if (slideIndex == slides.length) {
+      slideIndex = 1;
+    } else {
+      slideIndex++;
+    }
+    if (slides.length < 10) {
+      current.textContent = `0${slideIndex}`;
+    } else {
+      current.textContent = slideIndex;
+    }
+    dots.forEach(dot => dot.style.opacity = '0.5');
+    dots[slideIndex - 1].style.opacity = 1;
+  });
+  prev.addEventListener("click", () => {
+    if (offset == 0) {
+      offset = +width.slice(0, width.length - 2) * (slides.length - 1);
+    } else {
+      offset -= +width.slice(0, width.length - 2);
+    }
+    slidesField.style.transform = `translateX(-${offset}px)`;
+    if (slideIndex == 1) {
+      slideIndex = slides.length;
+    } else {
+      slideIndex--;
+    }
+    if (slides.length < 10) {
+      current.textContent = `0${slideIndex}`;
+    } else {
+      current.textContent = slideIndex;
+    }
+    dots.forEach(dot => dot.style.opacity = '0.5');
+    dots[slideIndex - 1].style.opacity = 1;
+  });
+  dots.forEach(dot => {
+    dot.addEventListener('click', e => {
+      const slideTo = e.target.getAttribute('data-slide-to');
+      slideIndex = slideTo;
+      offset = +width.slice(0, width.length - 2) * (slideTo - 1);
+      slidesField.style.transform = `translateX(-${offset}px)`;
+      if (slides.length < 10) {
+        current.textContent = `0${slideIndex}`;
+      } else {
+        current.textContent = slideIndex;
+      }
+      dots.forEach(dot => dot.style.opacity = '0.5');
+      dots[slideIndex - 1].style.opacity = 1;
+    });
+  });
 });
 /******/ })()
 ;
